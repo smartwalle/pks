@@ -151,7 +151,7 @@ func (this *Service) Handle(path string, h HandlerFunc) {
 func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Param) error {
 	// 处理请求参数信息
 	var req = &Request{}
-	req.t = this
+	req.s = this
 	req.ctx = ctx
 	req.Body = in.Body
 

@@ -49,7 +49,7 @@ func (this *base) Unmarshal(v interface{}) error {
 // --------------------------------------------------------------------------------
 type Request struct {
 	base
-	t   *Service
+	s   *Service
 	ctx context.Context
 }
 
@@ -62,7 +62,7 @@ func (this *Request) TraceId() string {
 }
 
 func (this *Request) Request(ctx context.Context, path string, header Header, data interface{}, opts ...client.CallOption) (rsp *Response, err error) {
-	if this.t != nil {
+	if this.s != nil {
 		var nOpts = make([]client.CallOption, 0, len(opts)+1)
 		nOpts = append(nOpts, client.WithAddress(this.FromAddress()))
 
@@ -72,7 +72,7 @@ func (this *Request) Request(ctx context.Context, path string, header Header, da
 			}
 		}
 
-		return this.t.Request(ctx, this.FromService(), path, header, data, nOpts...)
+		return this.s.Request(ctx, this.FromService(), path, header, data, nOpts...)
 	}
 	return nil, PathNotFoundErr
 }

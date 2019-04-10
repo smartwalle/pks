@@ -11,8 +11,8 @@ import (
 type StreamHandlerFunc func(s *Stream, req *Request, err error) error
 
 type Stream struct {
-	t      *Service
-	s      pb.RPC_StreamRequestStream
+	s      *Service
+	stream pb.RPC_StreamRequestStream
 	h      StreamHandlerFunc
 	header Header
 	ctx    context.Context
@@ -22,10 +22,10 @@ type Stream struct {
 	data   map[string]interface{}
 }
 
-func newStream(t *Service, s pb.RPC_StreamRequestStream) *Stream {
+func newStream(s *Service, stream pb.RPC_StreamRequestStream) *Stream {
 	var ns = &Stream{}
-	ns.t = t
 	ns.s = s
+	ns.stream = stream
 	ns.done = make(chan error)
 	return ns
 }
@@ -66,11 +66,11 @@ func (this *Stream) read() {
 
 	var param *pb.Param
 	for {
-		param, err = this.s.Recv()
+		param, err = this.stream.Recv()
 
 		if this.h != nil {
 			var req = &Request{}
-			req.t = this.t
+			req.s = this.s
 			req.ctx = this.ctx
 
 			if param != nil {
@@ -88,7 +88,7 @@ func (this *Stream) read() {
 				req.Header[kHeaderTraceId] = this.TraceId()
 			}
 
-			req.localAddress = this.t.ServerAddress()
+			req.localAddress = this.s.ServerAddress()
 
 			if nErr := this.h(this, req, err); nErr != nil {
 				err = nErr
@@ -108,9 +108,9 @@ func (this *Stream) Write(h Header, data interface{}) error {
 		header = Header{}
 	}
 	// 添加默认请求头信息
-	header.Add(kHeaderFromAddress, this.t.ServerAddress())
-	header.Add(kHeaderFromService, this.t.ServerName())
-	header.Add(kHeaderFromId, this.t.ServerId())
+	header.Add(kHeaderFromAddress, this.s.ServerAddress())
+	header.Add(kHeaderFromService, this.s.ServerName())
+	header.Add(kHeaderFromId, this.s.ServerId())
 	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
 	header.Add(kHeaderToPath, this.Path())
 
@@ -128,7 +128,7 @@ func (this *Stream) Write(h Header, data interface{}) error {
 	var out = &pb.Param{}
 	out.Body = reqData
 	out.Header = header
-	return this.s.Send(out)
+	return this.stream.Send(out)
 }
 
 func (this *Stream) Close() error {
@@ -142,7 +142,7 @@ func (this *Stream) close(err error) error {
 		this.done = nil
 	default:
 	}
-	return this.s.Close()
+	return this.stream.Close()
 }
 
 func (this *Stream) Handle(h StreamHandlerFunc) {
