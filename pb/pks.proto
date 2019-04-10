@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// $ protoc --go_out=plugins=grpc:. --micro_out=. pks.proto
+
+package pb;
+
+service RPC {
+    rpc SimpleRequest (Param) returns (Param) {}
+
+    rpc StreamRequest (stream Param) returns (stream Param) {}
+}
+
+message Param {
+    map<string, string> header = 1;
+    bytes body = 2;
+}
