@@ -42,22 +42,20 @@ type Service struct {
 }
 
 // --------------------------------------------------------------------------------
-func New() *Service {
+func New(opts ...micro.Option) *Service {
 	var s = &Service{}
 
-	s.ms = micro.NewService()
+	s.ms = micro.NewService(opts...)
 	s.acceptStream = make(chan *Stream)
-
-	s.ms.Init()
 
 	return s
 }
 
-func (this *Service) Option(opts ...micro.Option) {
-	if this.ms != nil {
-		this.ms.Init(opts...)
-	}
-}
+//func (this *Service) Option(opts ...micro.Option) {
+//	if this.ms != nil {
+//		this.ms.Init(opts...)
+//	}
+//}
 
 func (this *Service) Options() micro.Options {
 	return this.ms.Options()
@@ -129,11 +127,6 @@ func (this *Service) Run() error {
 	pb.RegisterRPCHandler(this.ms.Server(), this)
 
 	return this.ms.Run()
-}
-
-func (this *Service) RunWithName(name string) error {
-	this.Option(micro.Name(name))
-	return this.Run()
 }
 
 // --------------------------------------------------------------------------------
