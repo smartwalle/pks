@@ -85,7 +85,7 @@ func (this *Stream) read() {
 
 				// 不合并建立流时的请求头
 				req.Header = param.Header
-				req.Header[kHeaderTraceId] = this.TraceId()
+				req.Header.Set(kHeaderTraceId, this.TraceId())
 			}
 
 			req.localAddress = this.s.ServerAddress()
