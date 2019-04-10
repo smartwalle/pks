@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	kHeaderFromAddress = "t-from-address"
-	kHeaderFromService = "t-from-service"
-	kHeaderFromId      = "t-from-id"
-	kHeaderToService   = "t-to-service"
-	kHeaderToPath      = "t-to-path"
-	kHeaderDate        = "t-date"
-	kHeaderTraceId     = "t-trace-id"
+	kHeaderFromAddress = "T-From-Address"
+	kHeaderFromService = "T-From-Service"
+	kHeaderFromId      = "T-From-Id"
+	kHeaderToService   = "T-To-Service"
+	kHeaderToPath      = "T-To-Path"
+	kHeaderDate        = "T-Date"
+	kHeaderTraceId     = "T-Trace-Id"
 
 	kTimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
 )
@@ -157,9 +157,7 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 
 	// 从 ctx 中取出 metadata，并将 metadata 转换为 header
 	meta, _ := metadata.FromContext(ctx)
-	if meta != nil {
-		req.Header = Header(meta)
-	}
+	req.Header = WithMetadata(meta)
 	req.localAddress = this.ServerAddress()
 
 	// 处理响应参数信息
@@ -196,6 +194,7 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 	header.Add(kHeaderFromId, this.ServerId())
 	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
 	header.Add(kHeaderToPath, req.Path())
+	header.Add(kHeaderTraceId, req.TraceId())
 	out.Header = header
 
 	return nil
@@ -207,9 +206,7 @@ func (this *Service) StreamRequest(ctx context.Context, stream pb.RPC_StreamRequ
 
 	// 从 ctx 中取出 metadata，并将 metadata 转换为 header
 	meta, _ := metadata.FromContext(ctx)
-	if meta != nil {
-		nStream.header = Header(meta)
-	}
+	nStream.header = WithMetadata(meta)
 
 	this.acceptStream <- nStream
 
@@ -239,7 +236,6 @@ func (this *Service) Request(ctx context.Context, service, path string, header H
 	// 处理请求参数信息
 	var req = &pb.Param{}
 	req.Body = reqData
-	//req.Header = Header(meta)
 
 	// 发起请求
 	var ts = pb.NewRPCService(service, this.Service().Client())
@@ -287,9 +283,7 @@ func (this *Service) RequestStream(ctx context.Context, service, path string, he
 
 	// 从 ctx 中取出 metadata，并将 metadata 转换为 header，此处记录的是发起流请求时的 header 信息
 	meta, _ := metadata.FromContext(ctx)
-	if meta != nil {
-		nStream.header = Header(meta)
-	}
+	nStream.header = WithMetadata(meta)
 
 	return nStream, err
 }

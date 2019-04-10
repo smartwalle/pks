@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	kMicroFromService = "micro-from-service"
+	kMicroFromService = "Micro-From-Service"
 )
 
 // --------------------------------------------------------------------------------
