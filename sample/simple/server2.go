@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-plugins/registry/etcdv3"
+	"github.com/smartwalle/log4go"
 	"github.com/smartwalle/pks"
 	pks_client "github.com/smartwalle/pks/plugins/client/pks_grpc"
 	pks_server "github.com/smartwalle/pks/plugins/server/pks_grpc"
@@ -18,16 +18,22 @@ func main() {
 		micro.RegisterTTL(time.Second*5),
 		micro.RegisterInterval(time.Second*5),
 		micro.Registry(etcdv3.NewRegistry()),
-		micro.Name("s1"),
+		micro.Name("s2"),
 	)
 
-	s.Handle("p", func(req *pks.Request, rsp *pks.Response) error {
-		fmt.Println("Handle Request", req.TraceId())
-		fmt.Println("Handle Request", req.Header)
+	s.Handle("h2", func(req *pks.Request, rsp *pks.Response) error {
+		log4go.Infof("-----收到来自 %s 的请求-----\n", req.FromService())
+		log4go.Infof("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
+		log4go.Infoln("请求头")
+		for key, value := range req.Header {
+			log4go.Infoln(key, value)
+		}
 
-		var r, err = s.Request(req.Context(), "s2", "q", nil, nil)
-		fmt.Println("Req", r, err)
+		var h = pks.Header{}
+		h.Add("S2-Id", "S2 Message")
+		h.Add("S3-Id", "经过 S2 修改")
 
+		s.Request(req.Context(), "s1", "h1", h, nil)
 		return nil
 	})
 

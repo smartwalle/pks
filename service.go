@@ -11,7 +11,6 @@ import (
 	"github.com/smartwalle/pks/pb"
 	"github.com/smartwalle/xid"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 )
@@ -300,10 +299,9 @@ func (this *Service) ctxWrapper(ctx context.Context, service, path string, heade
 
 	meta, _ := metadata.FromContext(ctx)
 	for key, value := range meta {
-		if strings.ToLower(key) == "micro-from-service" {
-			continue
+		if header.Exists(key) == false {
+			header.Add(key, value)
 		}
-		header.Add(key, value)
 	}
 
 	// 添加默认值

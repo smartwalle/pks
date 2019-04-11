@@ -33,3 +33,8 @@ func (h Header) Get(key string) string {
 func (h Header) Del(key string) {
 	delete(h, http.CanonicalHeaderKey(key))
 }
+
+func (h Header) Exists(key string) bool {
+	_, ok := h[http.CanonicalHeaderKey(key)]
+	return ok
+}
