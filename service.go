@@ -11,18 +11,19 @@ import (
 	"github.com/smartwalle/pks/pb"
 	"github.com/smartwalle/xid"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	kHeaderFromAddress = "T-From-Address"
-	kHeaderFromService = "T-From-Service"
-	kHeaderFromId      = "T-From-Id"
-	kHeaderToService   = "T-To-Service"
-	kHeaderToPath      = "T-To-Path"
-	kHeaderDate        = "T-Date"
-	kHeaderTraceId     = "T-Trace-Id"
+	kHeaderFromAddress = "X-From-Address"
+	kHeaderFromService = "X-From-Service"
+	kHeaderFromId      = "X-From-Id"
+	kHeaderToService   = "X-To-Service"
+	kHeaderToPath      = "X-To-Path"
+	kHeaderDate        = "X-Date"
+	kHeaderTraceId     = "X-Trace-Id"
 
 	kTimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
 )
@@ -293,32 +294,36 @@ func (this *Service) RequestStreamWithAddress(ctx context.Context, address, path
 }
 
 func (this *Service) ctxWrapper(ctx context.Context, service, path string, header Header) context.Context {
+	if header == nil {
+		header = Header{}
+	}
+
 	meta, _ := metadata.FromContext(ctx)
-	if meta == nil {
-		meta = metadata.Metadata{}
+	for key, value := range meta {
+		if strings.ToLower(key) == "micro-from-service" {
+			continue
+		}
+		header.Add(key, value)
 	}
-	// 将 header 中的信息写入 metadata
-	for key, value := range header {
-		meta[key] = value
-	}
+
 	// 添加默认值
-	meta[kHeaderFromAddress] = this.ServerAddress()
-	meta[kHeaderFromService] = this.ServerName()
-	meta[kHeaderFromId] = this.ServerId()
-	meta[kHeaderDate] = time.Now().Format(kTimeFormat)
+	header.Add(kHeaderFromAddress, this.ServerAddress())
+	header.Add(kHeaderFromService, this.ServerName())
+	header.Add(kHeaderFromId, this.ServerId())
+	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
 	if len(path) > 0 {
-		meta[kHeaderToPath] = path
+		header.Add(kHeaderToPath, path)
 	}
 	if len(service) > 0 {
-		meta[kHeaderToService] = service
+		header.Add(kHeaderToService, service)
 	}
 
 	// 添加 trace id
-	_, ok := meta[kHeaderTraceId]
+	_, ok := header[kHeaderTraceId]
 	if ok == false {
-		meta[kHeaderTraceId] = fmt.Sprintf("%s-%s", this.ServerName(), xid.NewXID().Hex())
+		header.Add(kHeaderTraceId, fmt.Sprintf("%s-%s", this.ServerName(), xid.NewXID().Hex()))
 	}
 
 	// 以 meta 为数据构建新的 ctx
-	return metadata.NewContext(ctx, meta)
+	return metadata.NewContext(ctx, metadata.Metadata(header))
 }

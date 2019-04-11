@@ -18,11 +18,16 @@ func main() {
 		micro.RegisterTTL(time.Second*5),
 		micro.RegisterInterval(time.Second*5),
 		micro.Registry(etcdv3.NewRegistry()),
-		micro.Name("s"),
+		micro.Name("s1"),
 	)
 
 	s.Handle("p", func(req *pks.Request, rsp *pks.Response) error {
-		fmt.Println(req.Header)
+		fmt.Println("Handle Request", req.TraceId())
+		fmt.Println("Handle Request", req.Header)
+
+		var r, err = s.Request(req.Context(), "s2", "q", nil, nil)
+		fmt.Println("Req", r, err)
+
 		return nil
 	})
 

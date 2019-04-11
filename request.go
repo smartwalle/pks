@@ -4,11 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/micro/go-micro/client"
-	"strings"
-)
-
-const (
-	kMicroFromService = "Micro-From-Service"
 )
 
 // --------------------------------------------------------------------------------
@@ -20,14 +15,6 @@ type base struct {
 
 func (this *base) FromService() string {
 	return this.Header.Get(kHeaderFromService)
-}
-
-func (this *base) FromServices() []string {
-	var v = this.Header.Get(kMicroFromService)
-	if v != "" {
-		return strings.Split(v, ",")
-	}
-	return nil
 }
 
 func (this *base) Path() string {
