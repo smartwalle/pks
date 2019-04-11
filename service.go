@@ -317,8 +317,7 @@ func (this *Service) ctxWrapper(ctx context.Context, service, path string, heade
 	}
 
 	// 添加 trace id
-	_, ok := header[kHeaderTraceId]
-	if ok == false {
+	if header.Exists(kHeaderTraceId) == false {
 		header.Add(kHeaderTraceId, fmt.Sprintf("%s-%s", this.ServerName(), xid.NewXID().Hex()))
 	}
 

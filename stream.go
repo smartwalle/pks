@@ -80,12 +80,11 @@ func (this *Stream) read() {
 				// 将建立流的请求头合并到流消息中
 				//req.Header = this.header
 				//for k, v := range param.Header {
-				//	req.Header[k] = v
+				//	req.Header.Add(k, v)
 				//}
 
 				// 不合并建立流时的请求头
 				req.Header = param.Header
-				req.Header.Set(kHeaderTraceId, this.TraceId())
 			}
 
 			req.localAddress = this.s.ServerAddress()
@@ -113,6 +112,7 @@ func (this *Stream) Write(h Header, data interface{}) error {
 	header.Add(kHeaderFromId, this.s.ServerId())
 	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
 	header.Add(kHeaderToPath, this.Path())
+	header.Add(kHeaderTraceId, this.TraceId())
 
 	var reqData []byte
 	var err error
