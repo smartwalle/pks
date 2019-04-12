@@ -15,7 +15,7 @@ func main() {
 	var s = pks.New(
 		micro.Server(pks_server.NewServer()),
 		micro.Client(pks_client.NewClient(client.PoolSize(10))),
-		micro.RegisterTTL(time.Second*5),
+		micro.RegisterTTL(time.Second*10),
 		micro.RegisterInterval(time.Second*5),
 		micro.Registry(etcdv3.NewRegistry()),
 		micro.Name("s2"),
@@ -34,6 +34,7 @@ func main() {
 		h.Add("S3-Id", "经过 S2 修改")
 
 		s.Request(req.Context(), "s1", "h1", h, nil)
+		s.Request(req.Context(), "s1", "h2", h, nil)
 		return nil
 	})
 

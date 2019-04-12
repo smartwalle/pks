@@ -10,7 +10,7 @@ import (
 	"github.com/micro/go-micro/metadata"
 	"github.com/smartwalle/pks/pb"
 	"github.com/smartwalle/xid"
-	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -137,7 +137,12 @@ func (this *Service) Handle(path string, h HandlerFunc) {
 	if this.h == nil {
 		this.h = make(map[string]HandlerFunc)
 	}
-	this.h[filepath.Join(path)] = h
+
+	path = strings.TrimSpace(path)
+	if path == "" {
+		path = this.ServerName()
+	}
+	this.h[path] = h
 }
 
 // --------------------------------------------------------------------------------
@@ -157,8 +162,10 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 	var rsp = &Response{}
 
 	if this.h != nil {
+		var path = strings.TrimSpace(req.Path())
+
 		this.mu.RLock()
-		var h = this.h[req.Path()]
+		var h = this.h[path]
 		if h == nil {
 			h = this.h[this.ServerName()]
 		}
