@@ -43,7 +43,7 @@ func (this *Request) TraceId() string {
 	return this.Header.Get(kHeaderTraceId)
 }
 
-func (this *Request) Request(ctx context.Context, path string, header Header, data interface{}, opts ...client.CallOption) (rsp *Response, err error) {
+func (this *Request) Request(ctx context.Context, path string, header Header, data []byte, opts ...client.CallOption) (rsp *Response, err error) {
 	if this.s != nil {
 		var nOpts = make([]client.CallOption, 0, len(opts)+1)
 		nOpts = append(nOpts, client.WithAddress(this.FromAddress()))

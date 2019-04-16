@@ -2,7 +2,6 @@ package pks
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/micro/go-micro"
@@ -220,22 +219,12 @@ func (this *Service) AcceptStream() (*Stream, error) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *Service) Request(ctx context.Context, service, path string, header Header, data interface{}, opts ...client.CallOption) (rsp *Response, err error) {
+func (this *Service) Request(ctx context.Context, service, path string, header Header, data []byte, opts ...client.CallOption) (rsp *Response, err error) {
 	ctx = this.ctxWrapper(ctx, service, path, header)
-
-	var reqData []byte
-	switch bt := data.(type) {
-	case []byte:
-		reqData = bt
-	default:
-		if reqData, err = json.Marshal(data); err != nil {
-			return nil, err
-		}
-	}
 
 	// 处理请求参数信息
 	var req = &pb.Param{}
-	req.Body = reqData
+	req.Body = data
 
 	// 发起请求
 	var ts = pb.NewRPCService(service, this.Service().Client())

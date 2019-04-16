@@ -2,7 +2,6 @@ package pks
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/smartwalle/pks/pb"
 	"sync"
 	"time"
@@ -101,7 +100,7 @@ func (this *Stream) read() {
 	}
 }
 
-func (this *Stream) Write(h Header, data interface{}) error {
+func (this *Stream) Write(h Header, data []byte) error {
 	var header = h
 	if header == nil {
 		header = Header{}
@@ -114,19 +113,8 @@ func (this *Stream) Write(h Header, data interface{}) error {
 	header.Add(kHeaderToPath, this.Path())
 	header.Add(kHeaderTraceId, this.TraceId())
 
-	var reqData []byte
-	var err error
-	switch bt := data.(type) {
-	case []byte:
-		reqData = bt
-	default:
-		if reqData, err = json.Marshal(data); err != nil {
-			return err
-		}
-	}
-
 	var out = &pb.Param{}
-	out.Body = reqData
+	out.Body = data
 	out.Header = header
 	return this.stream.Send(out)
 }

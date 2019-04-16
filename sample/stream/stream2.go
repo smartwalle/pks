@@ -38,7 +38,7 @@ func main() {
 
 	h = pks.Header{}
 	h.Add("PKG-Id", "ST2_PKG1")
-	stream.Write(h, "hhh")
+	stream.Write(h, []byte("hhhhh"))
 
 	select {}
 }
