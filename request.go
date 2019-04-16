@@ -2,7 +2,6 @@ package pks
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/micro/go-micro/client"
 )
 
@@ -27,10 +26,6 @@ func (this *base) FromAddress() string {
 
 func (this *base) LocalAddress() string {
 	return this.localAddress
-}
-
-func (this *base) Unmarshal(v interface{}) error {
-	return json.Unmarshal(this.Body, v)
 }
 
 // --------------------------------------------------------------------------------
