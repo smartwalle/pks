@@ -30,7 +30,7 @@ var (
 	PathNotFoundErr = errors.New("request path not found")
 )
 
-type HandlerFunc func(req *Request, rsp *Response) error
+type HandlerFunc func(ctx context.Context, req *Request, rsp *Response) error
 
 // --------------------------------------------------------------------------------
 type Service struct {
@@ -149,7 +149,6 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 	// 处理请求参数信息
 	var req = &Request{}
 	req.s = this
-	req.ctx = ctx
 	req.Body = in.Body
 
 	// 从 ctx 中取出 metadata，并将 metadata 转换为 header
@@ -174,7 +173,7 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 			return PathNotFoundErr
 		}
 
-		if err := h(req, rsp); err != nil {
+		if err := h(ctx, req, rsp); err != nil {
 			return err
 		}
 	}

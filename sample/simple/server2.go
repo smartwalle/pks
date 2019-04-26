@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-plugins/registry/etcdv3"
@@ -21,7 +22,7 @@ func main() {
 		micro.Name("s2"),
 	)
 
-	s.Handle("h2", func(req *pks.Request, rsp *pks.Response) error {
+	s.Handle("h2", func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
 		log4go.Infof("-----收到来自 %s 的请求-----\n", req.FromService())
 		log4go.Infof("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
 		log4go.Infoln("请求头")
@@ -33,8 +34,8 @@ func main() {
 		h.Add("S2-Id", "S2 Message")
 		h.Add("S3-Id", "经过 S2 修改")
 
-		s.Request(req.Context(), "s1", "h1", h, nil)
-		s.Request(req.Context(), "s1", "h2", h, nil)
+		s.Request(ctx, "s1", "h1", h, nil)
+		s.Request(ctx, "s1", "h2", h, nil)
 		return nil
 	})
 

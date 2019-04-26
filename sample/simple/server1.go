@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-plugins/registry/etcdv3"
@@ -22,13 +23,13 @@ func main() {
 	)
 
 	// 默认
-	s.Handle("", func(req *pks.Request, rsp *pks.Response) error {
+	s.Handle("", func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
 		log4go.Infof("-----收到来自 %s 的请求-----\n", req.FromService())
 		log4go.Infof("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
 		return nil
 	})
 
-	s.Handle("h1", func(req *pks.Request, rsp *pks.Response) error {
+	s.Handle("h1", func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
 		log4go.Infof("-----收到来自 %s 的请求-----\n", req.FromService())
 		log4go.Infof("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
 		log4go.Infoln("请求头")

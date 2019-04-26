@@ -70,7 +70,6 @@ func (this *Stream) read() {
 		if this.h != nil {
 			var req = &Request{}
 			req.s = this.s
-			req.ctx = this.ctx
 
 			if param != nil {
 				req.Body = param.Body

@@ -31,12 +31,7 @@ func (this *base) LocalAddress() string {
 // --------------------------------------------------------------------------------
 type Request struct {
 	base
-	s   *Service
-	ctx context.Context
-}
-
-func (this *Request) Context() context.Context {
-	return this.ctx
+	s *Service
 }
 
 func (this *Request) TraceId() string {
