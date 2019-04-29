@@ -7,6 +7,7 @@ import (
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/metadata"
+	"github.com/micro/go-micro/server"
 	"github.com/smartwalle/pks/pb"
 	"github.com/smartwalle/xid"
 	"strings"
@@ -64,19 +65,19 @@ func (this *Service) Service() micro.Service {
 	return this.ms
 }
 
-//func (this *Service) Server() server.Server {
-//	if this.ms == nil {
-//		return nil
-//	}
-//	return this.ms.Server()
-//}
-//
-//func (this *Service) Client() client.Client {
-//	if this.ms == nil {
-//		return nil
-//	}
-//	return this.ms.Client()
-//}
+func (this *Service) Server() server.Server {
+	if this.ms == nil {
+		return nil
+	}
+	return this.ms.Server()
+}
+
+func (this *Service) Client() client.Client {
+	if this.ms == nil {
+		return nil
+	}
+	return this.ms.Client()
+}
 
 func (this *Service) ServerAddress() string {
 	if this.ms == nil {
