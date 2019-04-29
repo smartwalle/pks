@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/micro/go-micro/server"
-	"github.com/smartwalle/tx4go"
 	"log"
 
 	hello "github.com/micro/examples/greeter/srv/proto/hello"
@@ -23,15 +21,6 @@ type Say struct{}
 func (s *Say) Hello(ctx context.Context, req *hello.Request, rsp *hello.Response) error {
 	log.Print("Received Say.Hello request")
 	rsp.Msg = "Hello " + req.Name
-
-	tx, _ := tx4go.Begin(ctx, func() {
-		fmt.Println("confirm")
-	}, func() {
-		fmt.Println("cancel")
-	})
-
-	tx.Commit()
-
 	return nil
 }
 
@@ -44,8 +33,6 @@ func main() {
 		micro.Registry(etcdv3.NewRegistry()),
 		micro.Name("hello-srv"),
 	)
-
-	tx4go.Init(s)
 
 	hello.RegisterSayHandler(s.Server(), &Say{})
 

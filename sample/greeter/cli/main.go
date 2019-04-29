@@ -7,7 +7,6 @@ import (
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/server"
 	"github.com/smartwalle/pks"
-	"github.com/smartwalle/tx4go"
 	"time"
 
 	hello "github.com/micro/examples/grpc/greeter/srv/proto/hello"
@@ -28,25 +27,10 @@ func main() {
 
 	cl := hello.NewSayService("hello-srv", s.Client())
 
-	tx4go.Init(s)
-
 	time.AfterFunc(time.Second*3, func() {
-		tx, err := tx4go.Begin(context.Background(), func() {
-			fmt.Println("confirm")
-		}, func() {
-			fmt.Println("cancel")
-		})
-
-		rsp, err := cl.Hello(tx.Context(), &hello.Request{
+		rsp, _ := cl.Hello(context.Background(), &hello.Request{
 			Name: "John",
 		})
-
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-
-		tx.Commit()
 
 		fmt.Println(rsp.Msg)
 	})
