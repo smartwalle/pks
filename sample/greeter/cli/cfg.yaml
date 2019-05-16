@@ -1,0 +1,6 @@
+sampler:
+  type: const
+  param: 1
+reporter:
+  logSpans: true
+  localAgentHostPort: 192.168.1.99:5775

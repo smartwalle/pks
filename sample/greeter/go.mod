@@ -12,6 +12,7 @@ require (
 	github.com/micro/go-micro v1.1.0
 	github.com/micro/go-plugins v1.1.0
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/smartwalle/jaeger4go v1.0.0
 	github.com/smartwalle/pks v1.0.0
 	github.com/uber/jaeger-client-go v2.16.0+incompatible
 	github.com/uber/jaeger-lib v2.0.0+incompatible
