@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	kHeaderFromAddress = "X-From-Address"
-	kHeaderFromService = "X-From-Service"
-	kHeaderFromId      = "X-From-Id"
-	kHeaderToService   = "X-To-Service"
-	kHeaderToPath      = "X-To-Path"
-	kHeaderDate        = "X-Date"
-	kHeaderTraceId     = "X-Trace-Id"
+	kHeaderFromAddress = "x-from-address"
+	kHeaderFromService = "x-from-service"
+	kHeaderFromId      = "x-from-id"
+	kHeaderToService   = "x-to-service"
+	kHeaderToPath      = "x-to-path"
+	kHeaderDate        = "x-date"
+	kHeaderTraceId     = "x-trace-id"
 
 	kTimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
 )

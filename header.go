@@ -2,7 +2,7 @@ package pks
 
 import (
 	"github.com/micro/go-micro/metadata"
-	"net/http"
+	"strings"
 )
 
 type Header map[string]string
@@ -16,25 +16,25 @@ func WithMetadata(m metadata.Metadata) Header {
 }
 
 func (h Header) Add(key, value string) {
-	h[http.CanonicalHeaderKey(key)] = value
+	h[strings.ToLower(key)] = value
 }
 
 func (h Header) Set(key, value string) {
-	h[http.CanonicalHeaderKey(key)] = value
+	h[strings.ToLower(key)] = value
 }
 
 func (h Header) Get(key string) string {
 	if h == nil {
 		return ""
 	}
-	return h[http.CanonicalHeaderKey(key)]
+	return h[strings.ToLower(key)]
 }
 
 func (h Header) Del(key string) {
-	delete(h, http.CanonicalHeaderKey(key))
+	delete(h, strings.ToLower(key))
 }
 
 func (h Header) Exists(key string) bool {
-	_, ok := h[http.CanonicalHeaderKey(key)]
+	_, ok := h[strings.ToLower(key)]
 	return ok
 }
