@@ -20,7 +20,6 @@ import (
 	"github.com/micro/go-micro/selector"
 	"github.com/micro/go-micro/transport"
 
-	e "errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding"
@@ -35,7 +34,7 @@ type grpcClient struct {
 	once       sync.Once
 	opts       client.Options
 	pool       *pool
-	streamPool *pool
+	streamPool *streamPool
 }
 
 func init() {
@@ -192,7 +191,7 @@ func (g *grpcClient) stream(ctx context.Context, node *registry.Node, req client
 		}
 
 		if cc.GetState() == connectivity.TransientFailure || cc.GetState() == connectivity.Shutdown {
-			g.streamPool.release(address, cc, e.New(cc.GetState().String()))
+			//g.streamPool.release(address, cc, e.New(cc.GetState().String()))
 			continue
 		}
 		break
@@ -206,7 +205,7 @@ func (g *grpcClient) stream(ctx context.Context, node *registry.Node, req client
 
 	st, err := cc.ClientConn.NewStream(ctx, desc, methodToGRPC(req.Endpoint(), req.Body()), grpc.CallContentSubtype(cf.String()))
 
-	g.streamPool.release(address, cc, nil)
+	//g.streamPool.release(address, cc, nil)
 
 	if err != nil {
 		return nil, errors.InternalServerError("go.micro.client", fmt.Sprintf("Error creating stream: %v", err))
@@ -553,7 +552,7 @@ func newClient(opts ...client.Option) client.Client {
 		once:       sync.Once{},
 		opts:       options,
 		pool:       newPool(options.PoolSize, options.PoolTTL, false),
-		streamPool: newPool(4, -1, true),
+		streamPool: newStreamPool(10),
 	}
 
 	c := client.Client(rc)
