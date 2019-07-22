@@ -30,6 +30,10 @@ const (
 	kClientName = "pks_grpc"
 )
 
+const (
+	kDefaultStreamPoolSize = 4
+)
+
 type grpcClient struct {
 	once       sync.Once
 	opts       client.Options
@@ -512,7 +516,7 @@ func (g *grpcClient) String() string {
 	return kClientName
 }
 
-func newClient(opts ...client.Option) client.Client {
+func newClient(streamPoolSize int, opts ...client.Option) client.Client {
 	options := client.Options{
 		Codecs: make(map[string]codec.NewCodec),
 		CallOptions: client.CallOptions{
@@ -552,7 +556,7 @@ func newClient(opts ...client.Option) client.Client {
 		once:       sync.Once{},
 		opts:       options,
 		pool:       newPool(options.PoolSize, options.PoolTTL, false),
-		streamPool: newStreamPool(10),
+		streamPool: newStreamPool(streamPoolSize),
 	}
 
 	c := client.Client(rc)
@@ -566,5 +570,12 @@ func newClient(opts ...client.Option) client.Client {
 }
 
 func NewClient(opts ...client.Option) client.Client {
-	return newClient(opts...)
+	return newClient(kDefaultStreamPoolSize, opts...)
+}
+
+func NewClientWithSteamPoolSize(streamPoolSize int, opts ...client.Option) client.Client {
+	if streamPoolSize <= 0 {
+		streamPoolSize = kDefaultStreamPoolSize
+	}
+	return newClient(streamPoolSize, opts...)
 }
