@@ -1,0 +1,44 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/micro/go-micro"
+	"github.com/micro/go-micro/client"
+	"github.com/micro/go-plugins/registry/etcdv3"
+	"github.com/smartwalle/pks"
+	pks_client "github.com/smartwalle/pks/plugins/client/grpc"
+	pks_server "github.com/smartwalle/pks/plugins/server/grpc"
+	"time"
+)
+
+func main() {
+	var s = pks.New(
+		micro.Server(pks_server.NewServer()),
+		micro.Client(pks_client.NewClient(client.PoolSize(10))),
+		micro.RegisterTTL(time.Second*5),
+		micro.RegisterInterval(time.Second*5),
+		micro.Registry(etcdv3.NewRegistry()),
+		micro.Name("st2"),
+	)
+
+	var h = pks.Header{}
+	h.Add("ST2-Id", "ST2")
+	var stream, err = s.RequestStream(context.Background(), "st1", "p", h)
+	if err != nil {
+		fmt.Println("请求建立流时发生错误:", err)
+		return
+	}
+
+	fmt.Println("建立流成功, TraceId:", stream.TraceId())
+
+	stream.Handle(func(s *pks.Stream, req *pks.Request, err error) error {
+		return nil
+	})
+
+	h = pks.Header{}
+	h.Add("PKG-Id", "ST2_PKG1")
+	stream.Write(h, []byte("hhhhh"))
+
+	select {}
+}
