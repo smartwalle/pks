@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/smartwalle/pks/pb"
 	"sync"
-	"time"
 )
 
 type StreamHandlerFunc func(s *Stream, req *Request, err error) error
@@ -37,20 +36,12 @@ func (this *Stream) Header() Header {
 	return this.header
 }
 
-func (this *Stream) TraceId() string {
-	return this.header.Get(kHeaderTraceId)
-}
-
 func (this *Stream) FromService() string {
 	return this.header.Get(kHeaderFromService)
 }
 
 func (this *Stream) FromAddress() string {
 	return this.header.Get(kHeaderFromAddress)
-}
-
-func (this *Stream) Path() string {
-	return this.header.Get(kHeaderToPath)
 }
 
 func (this *Stream) waitDone() error {
@@ -108,9 +99,6 @@ func (this *Stream) Write(h Header, data []byte) error {
 	header.Add(kHeaderFromAddress, this.s.ServerAddress())
 	header.Add(kHeaderFromService, this.s.ServerName())
 	header.Add(kHeaderFromId, this.s.ServerId())
-	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
-	header.Add(kHeaderToPath, this.Path())
-	header.Add(kHeaderTraceId, this.TraceId())
 
 	var out = &pb.Param{}
 	out.Body = data

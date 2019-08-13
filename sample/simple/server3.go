@@ -24,7 +24,7 @@ func main() {
 	time.AfterFunc(time.Second*2, func() {
 		var h = pks.Header{}
 		h.Add("S3-Id", "S3 Message")
-		s.Request(context.Background(), "s2", "h2", h, nil)
+		s.Request(context.Background(), "s2", h, nil)
 	})
 
 	s.Run()

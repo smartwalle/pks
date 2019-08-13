@@ -23,19 +23,9 @@ func main() {
 	)
 
 	// 默认
-	s.Handle("", func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
+	s.Handle(func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
 		fmt.Printf("-----收到来自 %s 的请求-----\n", req.FromService())
-		fmt.Printf("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
-		return nil
-	})
-
-	s.Handle("h1", func(ctx context.Context, req *pks.Request, rsp *pks.Response) error {
-		fmt.Printf("-----收到来自 %s 的请求-----\n", req.FromService())
-		fmt.Printf("IP: %s, TraceId: %s \n", req.FromAddress(), req.TraceId())
-		fmt.Println("请求头")
-		for key, value := range req.Header {
-			fmt.Println(key, value)
-		}
+		fmt.Printf("IP: %s \n", req.FromAddress())
 		return nil
 	})
 

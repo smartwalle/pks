@@ -15,11 +15,13 @@ func main() {
 	var s = pks.New(
 		micro.Server(pks_server.NewServer()),
 		micro.Client(pks_client.NewClient(client.PoolSize(10))),
-		micro.RegisterTTL(time.Second*5),
+		micro.RegisterTTL(time.Minute*5),
 		micro.RegisterInterval(time.Second*5),
 		micro.Registry(etcdv3.NewRegistry()),
 		micro.Name("st1"),
 	)
+
+	var i = 0
 
 	go func() {
 		for {
@@ -28,13 +30,15 @@ func main() {
 				fmt.Println("处理流请求时发生错误:", err)
 				continue
 			}
+			i++
+
+			fmt.Println("=======", i)
 
 			fmt.Println("-----建立新的流-----")
-			fmt.Printf("Path: %s, TraceId: %s \n", stream.Path(), stream.TraceId())
-			fmt.Println("流请求头")
-			for key, value := range stream.Header() {
-				fmt.Println(key, value)
-			}
+			//fmt.Println("流请求头")
+			//for key, value := range stream.Header() {
+			//	fmt.Println(key, value)
+			//}
 
 			stream.Handle(func(s *pks.Stream, req *pks.Request, err error) error {
 				if err != nil {
@@ -42,13 +46,13 @@ func main() {
 					return err
 				}
 
-				fmt.Println("-----收到新的流消息-----")
-				fmt.Println("流消息请求头")
-				for key, value := range req.Header {
-					fmt.Println(key, value)
-				}
-
-				fmt.Println("流消息内容:", string(req.Body))
+				//fmt.Println("-----收到新的流消息-----")
+				//fmt.Println("流消息请求头")
+				//for key, value := range req.Header {
+				//	fmt.Println(key, value)
+				//}
+				//
+				//fmt.Println("流消息内容:", string(req.Body))
 				return nil
 			})
 		}

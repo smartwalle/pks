@@ -2,33 +2,18 @@ package pks
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/metadata"
 	"github.com/micro/go-micro/server"
 	"github.com/smartwalle/pks/pb"
-	"github.com/smartwalle/xid"
-	"strings"
 	"sync"
-	"time"
 )
 
 const (
 	kHeaderFromAddress = "x-from-address"
 	kHeaderFromService = "x-from-service"
 	kHeaderFromId      = "x-from-id"
-	//kHeaderToService   = "x-to-service"
-	//kHeaderToPath      = "x-to-path"
-	//kHeaderDate        = "x-date"
-	//kHeaderTraceId     = "x-trace-id"
-	//
-	//kTimeFormat = "Mon, 02 Jan 2006 15:04:05 GMT"
-)
-
-var (
-	PathNotFoundErr = errors.New("request path not found")
 )
 
 type HandlerFunc func(ctx context.Context, req *Request, rsp *Response) error
@@ -37,7 +22,7 @@ type HandlerFunc func(ctx context.Context, req *Request, rsp *Response) error
 type Service struct {
 	ms           micro.Service
 	mu           sync.RWMutex
-	h            map[string]HandlerFunc
+	h            HandlerFunc
 	acceptStream chan *Stream
 }
 
@@ -130,19 +115,8 @@ func (this *Service) Run() error {
 }
 
 // --------------------------------------------------------------------------------
-func (this *Service) Handle(path string, h HandlerFunc) {
-	this.mu.Lock()
-	defer this.mu.Unlock()
-
-	if this.h == nil {
-		this.h = make(map[string]HandlerFunc)
-	}
-
-	path = strings.TrimSpace(path)
-	if path == "" {
-		path = this.ServerName()
-	}
-	this.h[path] = h
+func (this *Service) Handle(h HandlerFunc) {
+	this.h = h
 }
 
 // --------------------------------------------------------------------------------
@@ -161,20 +135,7 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 	var rsp = &Response{}
 
 	if this.h != nil {
-		var path = strings.TrimSpace(req.Path())
-
-		this.mu.RLock()
-		var h = this.h[path]
-		if h == nil {
-			h = this.h[this.ServerName()]
-		}
-		this.mu.RUnlock()
-
-		if h == nil {
-			return PathNotFoundErr
-		}
-
-		if err := h(ctx, req, rsp); err != nil {
+		if err := this.h(ctx, req, rsp); err != nil {
 			return err
 		}
 	}
@@ -191,9 +152,6 @@ func (this *Service) SimpleRequest(ctx context.Context, in *pb.Param, out *pb.Pa
 	header.Add(kHeaderFromAddress, this.ServerAddress())
 	header.Add(kHeaderFromService, this.ServerName())
 	header.Add(kHeaderFromId, this.ServerId())
-	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
-	header.Add(kHeaderToPath, req.Path())
-	header.Add(kHeaderTraceId, req.TraceId())
 	out.Header = header
 
 	return nil
@@ -219,8 +177,8 @@ func (this *Service) AcceptStream() (*Stream, error) {
 }
 
 // --------------------------------------------------------------------------------
-func (this *Service) Request(ctx context.Context, service, path string, header Header, data []byte, opts ...client.CallOption) (rsp *Response, err error) {
-	ctx = this.ctxWrapper(ctx, service, path, header)
+func (this *Service) Request(ctx context.Context, service string, header Header, data []byte, opts ...client.CallOption) (rsp *Response, err error) {
+	ctx = this.ctxWrapper(ctx, header)
 
 	// 处理请求参数信息
 	var req = &pb.Param{}
@@ -244,7 +202,7 @@ func (this *Service) Request(ctx context.Context, service, path string, header H
 	return rsp, err
 }
 
-func (this *Service) RequestAddress(ctx context.Context, address, path string, header Header, body []byte, opts ...client.CallOption) (rsp *Response, err error) {
+func (this *Service) RequestAddress(ctx context.Context, address string, header Header, body []byte, opts ...client.CallOption) (rsp *Response, err error) {
 	var nOpts = make([]client.CallOption, 0, len(opts)+1)
 	nOpts = append(nOpts, client.WithAddress(address))
 	for _, opt := range opts {
@@ -252,12 +210,12 @@ func (this *Service) RequestAddress(ctx context.Context, address, path string, h
 			nOpts = append(nOpts, opt)
 		}
 	}
-	return this.Request(ctx, "", path, header, body, nOpts...)
+	return this.Request(ctx, "", header, body, nOpts...)
 }
 
 // --------------------------------------------------------------------------------
-func (this *Service) RequestStream(ctx context.Context, service, path string, header Header, opts ...client.CallOption) (*Stream, error) {
-	ctx = this.ctxWrapper(ctx, service, path, header)
+func (this *Service) RequestStream(ctx context.Context, service string, header Header, opts ...client.CallOption) (*Stream, error) {
+	ctx = this.ctxWrapper(ctx, header)
 
 	// 发起请求
 	var ts = pb.NewRPCService(service, this.Service().Client())
@@ -277,7 +235,7 @@ func (this *Service) RequestStream(ctx context.Context, service, path string, he
 	return nStream, err
 }
 
-func (this *Service) RequestStreamWithAddress(ctx context.Context, address, path string, header Header, opts ...client.CallOption) (*Stream, error) {
+func (this *Service) RequestStreamWithAddress(ctx context.Context, address string, header Header, opts ...client.CallOption) (*Stream, error) {
 	var nOpts = make([]client.CallOption, 0, len(opts)+1)
 	nOpts = append(nOpts, client.WithAddress(address))
 	for _, opt := range opts {
@@ -285,10 +243,10 @@ func (this *Service) RequestStreamWithAddress(ctx context.Context, address, path
 			nOpts = append(nOpts, opt)
 		}
 	}
-	return this.RequestStream(ctx, "", path, header, nOpts...)
+	return this.RequestStream(ctx, "", header, nOpts...)
 }
 
-func (this *Service) ctxWrapper(ctx context.Context, service, path string, header Header) context.Context {
+func (this *Service) ctxWrapper(ctx context.Context, header Header) context.Context {
 	if header == nil {
 		header = Header{}
 	}
@@ -304,18 +262,6 @@ func (this *Service) ctxWrapper(ctx context.Context, service, path string, heade
 	header.Add(kHeaderFromAddress, this.ServerAddress())
 	header.Add(kHeaderFromService, this.ServerName())
 	header.Add(kHeaderFromId, this.ServerId())
-	header.Add(kHeaderDate, time.Now().Format(kTimeFormat))
-	if len(path) > 0 {
-		header.Add(kHeaderToPath, path)
-	}
-	if len(service) > 0 {
-		header.Add(kHeaderToService, service)
-	}
-
-	// 添加 trace id
-	if header.Exists(kHeaderTraceId) == false {
-		header.Add(kHeaderTraceId, fmt.Sprintf("%s-%s", this.ServerName(), xid.NewXID().Hex()))
-	}
 
 	// 以 meta 为数据构建新的 ctx
 	return metadata.NewContext(ctx, metadata.Metadata(header))
