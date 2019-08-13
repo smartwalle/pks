@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	var s = pks.New(
+	var s = pks.NewService(
 		micro.Server(pks_server.NewServer()),
 		micro.Client(pks_client.NewClientWithSteamPoolSize(15, client.PoolSize(10))),
 		micro.RegisterTTL(time.Minute*5),

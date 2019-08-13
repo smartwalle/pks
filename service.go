@@ -27,7 +27,7 @@ type Service struct {
 }
 
 // --------------------------------------------------------------------------------
-func New(opts ...micro.Option) *Service {
+func NewService(opts ...micro.Option) *Service {
 	var s = &Service{}
 
 	s.ms = micro.NewService(opts...)
