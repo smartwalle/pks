@@ -40,23 +40,43 @@ func main() {
 			//	fmt.Println(key, value)
 			//}
 
-			stream.Handle(func(s *pks.Stream, req *pks.Request, err error) error {
-				if err != nil {
-					fmt.Println("接收流消息时发生错误:", err)
-					return err
-				}
+			//stream.Handle(func(s *pks.Stream, req *pks.Request, err error) error {
+			//	if err != nil {
+			//		fmt.Println("接收流消息时发生错误:", err)
+			//		return err
+			//	}
+			//
+			//	//fmt.Println("-----收到新的流消息-----")
+			//	//fmt.Println("流消息请求头")
+			//	//for key, value := range req.Header {
+			//	//	fmt.Println(key, value)
+			//	//}
+			//	//
+			//	//fmt.Println("流消息内容:", string(req.Body))
+			//	fmt.Println("ell")
+			//	return nil
+			//})
+			//
+			//stream.Write(nil, []byte("dde"))
+			//time.Sleep(time.Second * 5)
+			//stream.Close()
 
-				//fmt.Println("-----收到新的流消息-----")
-				//fmt.Println("流消息请求头")
-				//for key, value := range req.Header {
-				//	fmt.Println(key, value)
-				//}
-				//
-				//fmt.Println("流消息内容:", string(req.Body))
-				return nil
-			})
+			stream.Handle(&Stream1Handler{})
 		}
 	}()
 
 	s.Run()
+}
+
+type Stream1Handler struct {
+}
+
+func (this *Stream1Handler) OnMessage(s *pks.Stream, req *pks.Request) {
+	fmt.Println("message", string(req.Body))
+
+	s.Write(nil, []byte("e"))
+}
+
+func (this *Stream1Handler) OnClose(s *pks.Stream, err error) {
+	fmt.Println("close", err)
 }

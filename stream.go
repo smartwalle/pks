@@ -6,18 +6,23 @@ import (
 	"sync"
 )
 
-type StreamHandlerFunc func(s *Stream, req *Request, err error) error
+type StreamHandler interface {
+	OnMessage(*Stream, *Request)
+
+	OnClose(*Stream, error)
+}
 
 type Stream struct {
-	s      *Service
-	stream pb.RPC_StreamRequestStream
-	h      StreamHandlerFunc
-	header Header
-	ctx    context.Context
-	done   chan error
-	once   sync.Once
-	mu     sync.RWMutex
-	data   map[string]interface{}
+	s         *Service
+	stream    pb.RPC_StreamRequestStream
+	h         StreamHandler
+	header    Header
+	ctx       context.Context
+	done      chan error
+	mu        sync.RWMutex
+	once      sync.Once
+	closeOnce sync.Once
+	data      map[string]interface{}
 }
 
 func newStream(s *Service, stream pb.RPC_StreamRequestStream) *Stream {
@@ -57,6 +62,9 @@ func (this *Stream) read() {
 	var param *pb.Param
 	for {
 		param, err = this.stream.Recv()
+		if err != nil {
+			return
+		}
 
 		if this.h != nil {
 			var req = &Request{}
@@ -78,14 +86,9 @@ func (this *Stream) read() {
 
 			req.localAddress = this.s.ServerAddress()
 
-			if nErr := this.h(this, req, err); nErr != nil {
-				err = nErr
-				return
+			if this.h != nil {
+				this.h.OnMessage(this, req)
 			}
-		}
-
-		if err != nil {
-			return
 		}
 	}
 }
@@ -111,16 +114,23 @@ func (this *Stream) Close() error {
 }
 
 func (this *Stream) close(err error) error {
-	select {
-	case this.done <- err:
+	this.closeOnce.Do(func() {
+		select {
+		case this.done <- err:
+		default:
+		}
+
 		close(this.done)
 		this.done = nil
-	default:
-	}
+
+		if this.h != nil {
+			this.h.OnClose(this, err)
+		}
+	})
 	return this.stream.Close()
 }
 
-func (this *Stream) Handle(h StreamHandlerFunc) {
+func (this *Stream) Handle(h StreamHandler) {
 	this.h = h
 
 	this.once.Do(func() {
