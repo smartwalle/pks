@@ -10,3 +10,5 @@ require (
 	github.com/smartwalle/xid v1.0.0
 	google.golang.org/grpc v1.22.1
 )
+
+replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.0

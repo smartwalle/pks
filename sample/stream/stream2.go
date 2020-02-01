@@ -22,13 +22,15 @@ func main() {
 		micro.Name("st2"),
 	)
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 10000; i++ {
+		time.Sleep(time.Second * 1)
+
 		var h = pks.Header{}
 		h.Add("ST2-Id", "ST2")
 		var stream, err = s.RequestStream(context.Background(), "st1", h)
 		if err != nil {
 			fmt.Println("请求建立流时发生错误:", err)
-			return
+			continue
 		}
 
 		fmt.Println("建立流成功")
